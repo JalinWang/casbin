@@ -128,13 +128,21 @@ func (e *Enforcer) DeleteRole(role string) (bool, error) {
 // DeletePermission deletes a permission.
 // Returns false if the permission does not exist (aka not affected).
 func (e *Enforcer) DeletePermission(permission ...string) (bool, error) {
-	return e.RemoveFilteredPolicy(1, permission...)
+	rule, err := e.generateRuleForUserFromPermission("", permission...)
+	if err != nil {
+		return false, err
+	}
+	return e.RemoveFilteredPolicy(0, rule...)
 }
 
 // AddPermissionForUser adds a permission for a user or role.
 // Returns false if the user or role already has the permission (aka not affected).
 func (e *Enforcer) AddPermissionForUser(user string, permission ...string) (bool, error) {
-	return e.AddPolicy(util.JoinSlice(user, permission...))
+	rule, err := e.generateRuleForUserFromPermission(user, permission...)
+	if err != nil {
+		return false, err
+	}
+	return e.AddPolicy(rule)
 }
 
 // AddPermissionsForUser adds multiple permissions for a user or role.
@@ -142,7 +150,11 @@ func (e *Enforcer) AddPermissionForUser(user string, permission ...string) (bool
 func (e *Enforcer) AddPermissionsForUser(user string, permissions ...[]string) (bool, error) {
 	var rules [][]string
 	for _, permission := range permissions {
-		rules = append(rules, util.JoinSlice(user, permission...))
+		rule, err := e.generateRuleForUserFromPermission(user, permission...)
+		if err != nil {
+			return false, err
+		}
+		rules = append(rules, rule)
 	}
 	return e.AddPolicies(rules)
 }
@@ -150,7 +162,28 @@ func (e *Enforcer) AddPermissionsForUser(user string, permissions ...[]string) (
 // DeletePermissionForUser deletes a permission for a user or role.
 // Returns false if the user or role does not have the permission (aka not affected).
 func (e *Enforcer) DeletePermissionForUser(user string, permission ...string) (bool, error) {
-	return e.RemovePolicy(util.JoinSlice(user, permission...))
+	rule, err := e.generateRuleForUserFromPermission(user, permission...)
+	if err != nil {
+		return false, err
+	}
+	return e.RemovePolicy(rule)
+}
+
+func (e *Enforcer) generateRuleForUserFromPermission(user string, permission ...string) ([]string, error) {
+	subIndex, err := e.GetFieldIndex("p", constant.SubjectIndex)
+	if err != nil {
+		subIndex = 0
+	}
+
+	rule := make([]string, len(e.model["p"]["p"].Tokens))
+	rule[subIndex] = user
+	if len(permission) < subIndex {
+		copy(rule[:], permission[:])
+	} else {
+		copy(rule[:], permission[:subIndex])
+		copy(rule[subIndex+1:], permission[subIndex:])
+	}
+	return rule, err
 }
 
 // DeletePermissionsForUser deletes permissions for a user or role.
@@ -197,7 +230,8 @@ func (e *Enforcer) GetNamedPermissionsForUser(ptype string, user string, domain 
 
 // HasPermissionForUser determines whether a user has a permission.
 func (e *Enforcer) HasPermissionForUser(user string, permission ...string) bool {
-	return e.HasPolicy(util.JoinSlice(user, permission...))
+	rule, _ := e.generateRuleForUserFromPermission(user, permission...)
+	return e.HasPolicy(rule)
 }
 
 // GetImplicitRolesForUser gets implicit roles that a user has.

@@ -463,8 +463,29 @@ func testGetImplicitUsersForRole(t *testing.T, e *Enforcer, name string, res []s
 	}
 }
 
+func testEqual(t *testing.T, failedPoint string, a, b []string) {
+	t.Helper()
+	if !util.SetEquals(a, b) {
+		t.Error("Failed at ", failedPoint, ": Arrays not equal - ", a, ", ", b)
+	}
+}
+
 func TestExplicitPriorityModify(t *testing.T) {
 	e, _ := NewEnforcer("examples/priority_model_explicit.conf", "examples/priority_policy_explicit.csv")
+
+	res := e.GetAllSubjects()
+	testEqual(t, "GetAllSubjects", res, []string{"alice", "bob", "data1_deny_group", "data2_allow_group"})
+
+	res = e.GetAllObjects()
+	testEqual(t, "GetAllObjects", res, []string{"data1", "data2"})
+
+	res = e.GetAllActions()
+	testEqual(t, "GetAllActions", res, []string{"read", "write"})
+
+	ok := e.HasPermissionForUser("alice", "1", "data1", "read", "allow")
+	if !ok {
+		t.Fatalf("HasPermissionForUser failed")
+	}
 
 	testEnforce(t, e, "bob", "data2", "write", true)
 	_, err := e.AddPolicy("1", "bob", "data2", "write", "deny")

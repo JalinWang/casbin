@@ -375,6 +375,14 @@ func (e *Enforcer) GetFieldIndex(ptype string, field string) (int, error) {
 	return e.model.GetFieldIndex(ptype, field)
 }
 
+func (e *Enforcer) GetFieldIndexWithDefault(ptype string, field string, defaultLoc int) int {
+	i, err := e.GetFieldIndex(ptype, field)
+	if err != nil && i == -1 {
+		i = defaultLoc
+	}
+	return i
+}
+
 func (e *Enforcer) SetFieldIndex(ptype string, field string, index int) {
 	assertion := e.model["p"][ptype]
 	assertion.FieldIndexMap[field] = index

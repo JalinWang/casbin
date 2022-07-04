@@ -17,6 +17,7 @@ package casbin
 import (
 	"errors"
 	"fmt"
+	"github.com/casbin/casbin/v2/constant"
 	"strings"
 
 	"github.com/Knetic/govaluate"
@@ -25,32 +26,38 @@ import (
 
 // GetAllSubjects gets the list of subjects that show up in the current policy.
 func (e *Enforcer) GetAllSubjects() []string {
-	return e.model.GetValuesForFieldInPolicyAllTypes("p", 0)
+	return e.model.GetValuesForFieldInPolicyAllTypes("p",
+		e.GetFieldIndexWithDefault("p", constant.SubjectIndex, 0))
 }
 
 // GetAllNamedSubjects gets the list of subjects that show up in the current named policy.
 func (e *Enforcer) GetAllNamedSubjects(ptype string) []string {
-	return e.model.GetValuesForFieldInPolicy("p", ptype, 0)
+	return e.model.GetValuesForFieldInPolicy("p", ptype,
+		e.GetFieldIndexWithDefault("p", constant.SubjectIndex, 0))
 }
 
 // GetAllObjects gets the list of objects that show up in the current policy.
 func (e *Enforcer) GetAllObjects() []string {
-	return e.model.GetValuesForFieldInPolicyAllTypes("p", 1)
+	return e.model.GetValuesForFieldInPolicyAllTypes("p",
+		e.GetFieldIndexWithDefault("p", constant.ObjectIndex, 1))
 }
 
 // GetAllNamedObjects gets the list of objects that show up in the current named policy.
 func (e *Enforcer) GetAllNamedObjects(ptype string) []string {
-	return e.model.GetValuesForFieldInPolicy("p", ptype, 1)
+	return e.model.GetValuesForFieldInPolicy("p", ptype,
+		e.GetFieldIndexWithDefault("p", constant.ObjectIndex, 1))
 }
 
 // GetAllActions gets the list of actions that show up in the current policy.
 func (e *Enforcer) GetAllActions() []string {
-	return e.model.GetValuesForFieldInPolicyAllTypes("p", 2)
+	return e.model.GetValuesForFieldInPolicyAllTypes("p",
+		e.GetFieldIndexWithDefault("p", constant.ActionIndex, 2))
 }
 
 // GetAllNamedActions gets the list of actions that show up in the current named policy.
 func (e *Enforcer) GetAllNamedActions(ptype string) []string {
-	return e.model.GetValuesForFieldInPolicy("p", ptype, 2)
+	return e.model.GetValuesForFieldInPolicy("p", ptype,
+		e.GetFieldIndexWithDefault("p", constant.ActionIndex, 2))
 }
 
 // GetAllRoles gets the list of roles that show up in the current policy.
